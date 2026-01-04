@@ -1,0 +1,6 @@
+{
+  "excluded": [".git*", ".github*", "config.json", "script.py", "index.html", "README.md"],
+  "metadata": {
+    "busybox-arm64-v8a": { "version": "1.33.1", "note": "Bản complied dành riêng cho cấu trúc CPU ARMv8a", "description": "Busybox chứa những binary UNIX phổ biến nhất, tập trung tại 1 nơi." }
+  }
+}
