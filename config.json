@@ -17,6 +17,16 @@
       "version": "8.10.1",
       "note": "Tested on SM_G960F. github.com/moparisthebest/static-curl/",
       "description": "CURL static built. (aarch64-unknown-linux-musl) libcurl/8.10.1 OpenSSL/1.1.1t zlib/1.2.12 libssh2/1.9.0 nghttp2/1.43.0"
-    }
+    },
+    "adb-genymotion-build.zip": {
+        "version": "29.0.2-105",
+        "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
+        "description": "ADB static built by Genymotion"
+    },
+    "aapt.zip": {
+        "version": "0.2-105",
+        "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
+        "description": "Android Asset Packaging Tool static built"
+    }    
   }
 }
