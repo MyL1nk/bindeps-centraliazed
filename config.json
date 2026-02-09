@@ -27,6 +27,11 @@
         "version": "0.2-105",
         "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
         "description": "Android Asset Packaging Tool static built"
-    }    
+    },
+    "WebView2Loader.dll": {
+        "version": "1.0.1293.44",
+        "note": "Taken from Xiaowei installation from Zuko's HOME PC.",
+        "description": "Microsoft Edge Embedded Browser WebView Loader"
+    }
   }
 }
