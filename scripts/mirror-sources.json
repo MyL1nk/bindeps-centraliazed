@@ -1,0 +1,21 @@
+{
+  "$schema": "./scripts/mirror-sources.schema.json",
+  "sources": [
+    {
+      "id": "85f793",
+      "type": "release_asset",
+      "name": "SQLite3 (arm64) — Magisk Module",
+      "description": "Static sqlite3 binary for ARM64, extracted from magisk module release asset",
+      "repo": "https://github.com/rojenzaman/sqlite3-magisk-module",
+      "tag": "latest",
+      "mappings": [
+        {
+          "asset_pattern": "SQLite-v*-for-magisk.multi-arch.zip",
+          "unzip": true,
+          "pick": "system/bin/sqlite3.arm64",
+          "dest": "sqlite3-arm64"
+        }
+      ]
+    }
+  ]
+}
