@@ -24,8 +24,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/mirror-sources.json"
+REPO_CONFIG="$REPO_ROOT/config.json"
 DRY_RUN=false
 SOURCE_FILTER=""
+RESOLVED_VERSION=""  # Set by sync functions; read by dispatcher to update config.json
 
 # Colors for output
 RED='\033[0;31m'
@@ -288,26 +290,30 @@ get_release_json() {
 }
 
 # Match a wildcard pattern against asset names in release JSON.
-# Prints the browser_download_url of the first matching asset, or empty string.
+# Prints the browser_download_url of the first matching asset.
+# Uses a single jq call + full drain to avoid SIGPIPE on Windows.
 match_asset_pattern() {
     local release_json="$1"
     local pattern="$2"
+    local matched_url=""
 
-    # Iterate all assets and do bash glob match
-    while IFS= read -r asset_line; do
-        local asset_name asset_url
-        asset_name=$(echo "$asset_line" | jq -r '.name')
-        asset_url=$(echo "$asset_line"  | jq -r '.browser_download_url')
+    # Extract all assets as tab-separated "name\turl" in one jq pass,
+    # then drain the entire output (no early pipe break → no SIGPIPE).
+    while IFS=$'\t' read -r asset_name asset_url; do
+        # Skip processing once we already found a match, but keep draining
+        [[ -n "$matched_url" ]] && continue
 
-        # Use bash case for wildcard matching (supports * and ?)
         case "$asset_name" in
             $pattern)
-                echo "$asset_url"
-                return 0
+                matched_url="$asset_url"
                 ;;
         esac
-    done < <(echo "$release_json" | jq -c '.assets[]')
+    done < <(echo "$release_json" | jq -r '.assets[] | [.name, .browser_download_url] | @tsv')
 
+    if [[ -n "$matched_url" ]]; then
+        echo "$matched_url"
+        return 0
+    fi
     return 1
 }
 
@@ -456,6 +462,9 @@ sync_source_release() {
     local resolved_tag
     resolved_tag=$(resolve_release_tag "$repo" "$tag") || return 1
 
+    # Expose resolved version for config.json update
+    RESOLVED_VERSION="$resolved_tag"
+
     log_info "Type: release | Repo: $repo @ $resolved_tag"
 
     local slug
@@ -558,6 +567,16 @@ sync_source_release_asset() {
     local resolved_tag
     resolved_tag=$(resolve_release_tag "$repo" "$tag") || return 1
 
+    # Version extraction config
+    local version_from version_regex
+    version_from=$(echo "$source_json"  | jq -r '.version_from // "tag"')
+    version_regex=$(echo "$source_json" | jq -r '.version_regex // ""')
+
+    # If version_from=tag, we can resolve immediately
+    if [[ "$version_from" == "tag" ]]; then
+        RESOLVED_VERSION="$resolved_tag"
+    fi
+
     log_info "Type: release_asset | Repo: $repo @ $resolved_tag"
 
     local success_count=0
@@ -606,6 +625,16 @@ sync_source_release_asset() {
         asset_name=$(basename "$asset_url")
         log_info "Matched asset: $asset_name"
         log_info "URL: $asset_url"
+
+        # Extract version from asset name if requested (only capture on first match)
+        if [[ "$version_from" == "asset_name" && -n "$version_regex" && -z "$RESOLVED_VERSION" ]]; then
+            if [[ "$asset_name" =~ $version_regex ]]; then
+                RESOLVED_VERSION="${BASH_REMATCH[1]}"
+                log_info "Extracted version: $RESOLVED_VERSION"
+            else
+                log_warn "version_regex '$version_regex' did not match asset name '$asset_name'"
+            fi
+        fi
 
         # Download to temp dir
         local tmp_dir
@@ -695,6 +724,46 @@ sync_source_release_asset() {
     return $fail_count
 }
 
+# ─── Config version update ────────────────────────────────────────────────────
+
+# Update version field in repo config.json for all metadata entries
+# whose syncId matches the given source id.
+update_config_version() {
+    local source_id="$1"
+    local version="$2"
+
+    if [[ ! -f "$REPO_CONFIG" ]]; then
+        return 0
+    fi
+
+    # Count matching entries
+    local count
+    count=$(jq --arg sid "$source_id" \
+        '[.metadata | to_entries[] | select(.value.syncId == $sid)] | length' \
+        "$REPO_CONFIG")
+
+    if [[ "$count" -eq 0 ]]; then
+        return 0
+    fi
+
+    log_step "Updating config.json: $count entry(ies) with syncId=$source_id -> version=$version"
+
+    if $DRY_RUN; then
+        log_warn "[DRY-RUN] Would update config.json version to $version for syncId=$source_id"
+        return 0
+    fi
+
+    local updated
+    updated=$(jq --arg sid "$source_id" --arg ver "$version" \
+        '.metadata |= with_entries(
+            if .value.syncId == $sid then .value.version = $ver
+            else . end
+        )' "$REPO_CONFIG")
+
+    echo "$updated" > "$REPO_CONFIG"
+    log_success "config.json updated: version set to $version"
+}
+
 # ─── Dispatcher ───────────────────────────────────────────────────────────────
 
 sync_source() {
@@ -717,21 +786,32 @@ sync_source() {
     [[ -n "$description" ]] && log_info "Desc: $description"
     log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+    # Reset version before each source
+    RESOLVED_VERSION=""
+
+    local sync_result=0
     case "$type" in
         git)
-            sync_source_git "$source_json"
+            sync_source_git "$source_json" || sync_result=$?
             ;;
         release)
-            sync_source_release "$source_json"
+            sync_source_release "$source_json" || sync_result=$?
             ;;
         release_asset)
-            sync_source_release_asset "$source_json"
+            sync_source_release_asset "$source_json" || sync_result=$?
             ;;
         *)
             log_error "Unknown source type '$type' for source '$name'"
             return 1
             ;;
     esac
+
+    # After successful sync, update config.json version if resolved
+    if [[ $sync_result -eq 0 && -n "$RESOLVED_VERSION" ]]; then
+        update_config_version "$id" "$RESOLVED_VERSION"
+    fi
+
+    return $sync_result
 }
 
 # ─── Main ─────────────────────────────────────────────────────────────────────

@@ -5,33 +5,47 @@
     "config.json",
     "script.py",
     "index.html",
-    "README.md"
+    "README.md",
+    "script/*"
   ],
   "metadata": {
+    "sqlite3-arm64": {
+      "version": "3.53.3",
+      "note": "Bản complied dành riêng cho cấu trúc CPU ARMv8a",
+      "description": "SQLite 3 static build binary",
+      "syncId": "85f793"
+    },
     "busybox-arm64-v8a": {
       "version": "1.33.1",
       "note": "Bản complied dành riêng cho cấu trúc CPU ARMv8a",
-      "description": "Busybox chứa những binary UNIX phổ biến nhất, tập trung tại 1 nơi."
+      "description": "Busybox chứa những binary UNIX phổ biến nhất (core-utils), tập trung tại 1 nơi."
     },
     "curl-aarch64": {
-      "version": "8.10.1",
-      "note": "Tested on SM_G960F. github.com/moparisthebest/static-curl/",
-      "description": "CURL static built. (aarch64-unknown-linux-musl) libcurl/8.10.1 OpenSSL/1.1.1t zlib/1.2.12 libssh2/1.9.0 nghttp2/1.43.0"
+      "syncId": "curl-arm64",
+      "version": "8.22.0",
+      "note": "Tested on SM_G960F. github.com/stunnel/static-curl/",
+      "description": "CURL static built. (aarch64-linux-musl)"
+    },
+    "trurl-aarch64": {
+      "syncId": "curl-arm64",
+      "version": "8.22.0",
+      "note": "Tested on SM_G960F. github.com/stunnel/static-curl/",
+      "description": "TRURL static built. (aarch64-linux-musl)"
     },
     "adb-genymotion-build.zip": {
-        "version": "29.0.2-105",
-        "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
-        "description": "ADB static built by Genymotion"
+      "version": "29.0.2-105",
+      "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
+      "description": "ADB static built by Genymotion"
     },
     "aapt.zip": {
-        "version": "0.2-105",
-        "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
-        "description": "Android Asset Packaging Tool static built"
+      "version": "0.2-105",
+      "note": "Taken from Genymotion extracted installation from Zuko's HOME PC.",
+      "description": "Android Asset Packaging Tool static built"
     },
     "WebView2Loader.dll": {
-        "version": "1.0.1293.44",
-        "note": "Taken from Xiaowei installation from Zuko's HOME PC.",
-        "description": "Microsoft Edge Embedded Browser WebView Loader"
+      "version": "1.0.1293.44",
+      "note": "Taken from Xiaowei installation from Zuko's HOME PC.",
+      "description": "Microsoft Edge Embedded Browser WebView Loader"
     }
   }
 }

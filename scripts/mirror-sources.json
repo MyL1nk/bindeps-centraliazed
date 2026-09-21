@@ -8,12 +8,38 @@
       "description": "Static sqlite3 binary for ARM64, extracted from magisk module release asset",
       "repo": "https://github.com/rojenzaman/sqlite3-magisk-module",
       "tag": "latest",
+      "version_from": "asset_name",
+      "version_regex": "SQLite-v([0-9.]+)-",
       "mappings": [
         {
           "asset_pattern": "SQLite-v*-for-magisk.multi-arch.zip",
           "unzip": true,
           "pick": "system/bin/sqlite3.arm64",
           "dest": "sqlite3-arm64"
+        }
+      ]
+    },
+    {
+      "id": "curl-arm64",
+      "type": "release_asset",
+      "name": "CURL for arm64-v8a (aarch64)",
+      "description": "Static CURL binary for ARM64",
+      "repo": "https://github.com/stunnel/static-curl",
+      "tag": "latest",
+      "version_from": "asset_name",
+      "version_regex": "curl-linux-aarch64-musl-([0-9.]+)\\.tar.xz",
+      "mappings": [
+        {
+          "asset_pattern": "curl-linux-aarch64-musl-*.tar.xz",
+          "unzip": true,
+          "pick": "curl",
+          "dest": "curl-aarch64"
+        },
+        {
+          "asset_pattern": "curl-linux-aarch64-musl-*.tar.xz",
+          "unzip": true,
+          "pick": "trurl",
+          "dest": "trurl-aarch64"
         }
       ]
     }
