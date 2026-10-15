@@ -22,13 +22,13 @@
     },
     "curl-aarch64": {
       "syncId": "curl-arm64",
-      "version": "8.22.0",
+      "version": "8.23.0",
       "note": "Tested on SM_G960F. github.com/stunnel/static-curl/",
       "description": "CURL static built. (aarch64-linux-musl)"
     },
     "trurl-aarch64": {
       "syncId": "curl-arm64",
-      "version": "8.22.0",
+      "version": "8.23.0",
       "note": "Tested on SM_G960F. github.com/stunnel/static-curl/",
       "description": "TRURL static built. (aarch64-linux-musl)"
     },
